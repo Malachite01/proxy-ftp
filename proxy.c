@@ -407,38 +407,38 @@ int main(){
         //! |=====================|
         //Ecrire les données de l'interface utilisateur dans le serveur (données récupérées soit en dehors de la boucle
         //la première fois, soit a la fin de la boucle pour éviter les décalages.)
+        //Client -> Serveur, ecriture
         lenW = write(descSockSERV, buffer, strlen(buffer));
         if (lenW < 0) {
             perror("Erreur d'écriture");
             exit(-1);
         }
-        printf("Client -> Serveur, ecriture: %s\n",buffer);
         
         //Lecture des données renvoyées par le serveur 
+        //Serveur, lecture
         memset(buffer, 0, MAXBUFFERLEN);
         lenR = read(descSockSERV, buffer, MAXBUFFERLEN-1);
         if(lenR < 0) {
             perror("Erreur de lecture");
             exit(-1);
         }
-        printf("Serveur, lecture : %s\n",buffer);
 
         //Ecrire les données du serveur dans l'interface utilisateur
+        //Serveur -> Client, ecriture
         lenW = write(descSockCOM, buffer, strlen(buffer));
         if (lenW < 0) {
             perror("Erreur d'écriture");
             exit(-1);
         }
-        printf("Serveur -> Client, ecriture: %s\n",buffer);
 
         //Lire les données de l'interface utilisateur
+        //Client, lecture
         memset(buffer, 0, MAXBUFFERLEN);
         lenR = read(descSockCOM, buffer, MAXBUFFERLEN-1);
         if(lenR < 0) {
             perror("Erreur de lecture");
             exit(-1);
         } 
-        printf("Client, lecture: %s\n",buffer);
 
     }
 
