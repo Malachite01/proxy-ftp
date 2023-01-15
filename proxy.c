@@ -108,7 +108,7 @@ int main(){
      * A vous de continuer !
      * *****/
 
-    char nomUser[MAXBUFFERLEN/2-4], nomServeur[MAXBUFFERLEN/2-4], port[] = "21"; 
+    char nomUser[MAXBUFFERLEN/2-1], nomServeur[MAXBUFFERLEN/2-1], port[] = "21"; 
 
     //Premier envoi du 220 au client pour recuperer user et adresse serveur
     strcpy(buffer, "220 Connexion socket acceptée, identifiez vous avec user@server\r\n");
