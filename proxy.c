@@ -349,6 +349,10 @@ int main(){
                 exit(-1);
             }
 
+            //! |=========================|
+            //! |   TRANSFERT DE DONNEES  |
+            //! |=========================|
+            
             //Lecture du serveur passif
             memset(buffer, 0, MAXBUFFERLEN);
             lenR = read(descSockPASVS, buffer, MAXBUFFERLEN-1);
@@ -356,10 +360,6 @@ int main(){
                 perror("Erreur de lecture PASV Serveur");
                 exit(-1);
             }
-
-            //! |=========================|
-            //! |   TRANSFERT DE DONNEES  |
-            //! |=========================|
             //Pour rentrer dans la boucle la premiere fois on change la valeur de ecode mais pas a 0
             ecode = 1;
             while (ecode != 0) {
