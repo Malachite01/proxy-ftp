@@ -19,25 +19,22 @@
 #define MAXHOSTLEN 64               // Taille d'un nom de machine
 #define MAXPORTLEN 64               // Taille d'un numéro de port
 
+//ICI TOUT LE PROTOCOLE
+void fils();
+
 int main(){
     int ecode;                       // Code retour des fonctions
     char serverAddr[MAXHOSTLEN];     // Adresse du serveur
     char serverPort[MAXPORTLEN];     // Port du server
-    int descSockRDV;                 // Descripteur de socket de rendez-vous
     int descSockCOM;                 // Descripteur de socket de communication
-    int descSockSERV;                // Descripteur de socket du serveur
-    int descSockPASVC;               // Descripteur de socket du mode passive CLIENT
-    int descSockPASVS;               // Descripteur de socket du mode passive SERVEUR
+    int descSockRDV;                 // Descripteur de socket de rendez-vous
     struct addrinfo hints;           // Contrôle la fonction getaddrinfo
-    struct addrinfo hintsPasv;       // Contrôle la fonction getaddrinfo pour le mode passif
     struct addrinfo *res;            // Contient le résultat de la fonction getaddrinfo
     struct sockaddr_storage myinfo;  // Informations sur la connexion de RDV
     struct sockaddr_storage from;    // Informations sur le client connecté
     socklen_t len;                   // Variable utilisée pour stocker les
 				                     // longueurs des structures de socket
     char buffer[MAXBUFFERLEN];       // Tampon de communication entre le client et le serveur
-    socklen_t lenR;                  // variable utilisée pour stocker la longueur des structures de socket en READ
-    socklen_t lenW;                  // variable utilisée pour stocker la longueur des structures de socket en WRITE
 
     // Initialisation de la socket de RDV IPv4/TCP
     descSockRDV = socket(AF_INET, SOCK_STREAM, 0);
@@ -95,20 +92,43 @@ int main(){
      }
 
 	len = sizeof(struct sockaddr_storage);
-     // Attente connexion du client
-     // Lorsque demande de connexion, creation d'une socket de communication avec le client
-     descSockCOM = accept(descSockRDV, (struct sockaddr *) &from, &len);
-     if (descSockCOM == -1){
-         perror("Erreur accept\n");
-         exit(6);
-     }
+    
+    // Attente connexion du client
+    // Lorsque demande de connexion, creation d'une socket de communication avec le client 
+    while (true) {
+        int err;
+        pid_t pid;
+        int rapport, numSig, status;
+        
+        descSockCOM = accept(descSockRDV, (struct sockaddr *) &from, &len);
+        if (descSockCOM == -1){
+            perror("Erreur accept\n");
+            exit(6);
+        }
 
-    /*******
-     *
-     * A vous de continuer !
-     * *****/
+        // Creation d'un processus fils
+        pid = fork();
+        switch (pid) {
+            case -1:
+                perror("Impossible de creer le fils 1");
+                exit(1);
 
-    char nomUser[MAXBUFFERLEN/2-1], nomServeur[MAXBUFFERLEN/2-1], port[] = "21"; 
+            case 0:
+                fils(descSockCOM);
+                exit(0);
+        }
+    }
+}
+
+void fils(int descSockCOM) {
+    int descSockSERV;                // Descripteur de socket du serveur
+    int descSockPASVC;               // Descripteur de socket du mode passive CLIENT
+    int descSockPASVS;               // Descripteur de socket du mode passive SERVEUR
+    struct addrinfo hintsPasv;       // Contrôle la fonction getaddrinfo pour le mode passif
+    socklen_t lenR;                  // variable utilisée pour stocker la longueur des structures de socket en READ
+    socklen_t lenW;                  // variable utilisée pour stocker la longueur des structures de socket en WRITE
+    int ecode;
+    char buffer[MAXBUFFERLEN], nomUser[MAXBUFFERLEN/2-1], nomServeur[MAXBUFFERLEN/2-1], port[] = "21"; 
 
     //Premier envoi du 220 au client pour recuperer user et adresse serveur
     strcpy(buffer, "220 Connexion socket acceptée, identifiez vous avec user@server\r\n");
@@ -342,7 +362,7 @@ int main(){
                 exit(-1);
             }
 
-            //Ecrire les données du serveur dans l'interface utilisateur
+            //Ecrire les données du serveur dans l'interface utilisateur (150)
             lenW = write(descSockCOM, buffer, strlen(buffer));
             if (lenW < 0) {
                 perror("Erreur d'écriture");
@@ -360,21 +380,13 @@ int main(){
                 perror("Erreur de lecture PASV Serveur");
                 exit(-1);
             }
-            //Pour rentrer dans la boucle la premiere fois on change la valeur de ecode mais pas a 0
-            ecode = 1;
-            while (ecode != 0) {
-                ecode = write(descSockPASVC, buffer, strlen(buffer));
-                memset(buffer, 0, MAXBUFFERLEN);
-                ecode = read(descSockPASVS, buffer, MAXBUFFERLEN - 1);
-                if (ecode < 0) {
-                    perror("Erreur lecture pasv serveur");
-                    exit(-1);
-                }
-            }
 
-            //Fermeture des sockets de connexion en mode passif
-            close(descSockPASVC);
-            close(descSockPASVS);
+            //Ecriture sur le serveur passif
+            lenW = write(descSockPASVC, buffer, strlen(buffer));
+            if(lenW < 0) {
+                perror("Erreur de lecture PASV Serveur");
+                exit(-1);
+            }
 
             //Lecture des données renvoyées par le serveur 
             memset(buffer, 0, MAXBUFFERLEN);
@@ -383,6 +395,10 @@ int main(){
                 perror("Erreur de lecture");
                 exit(-1);
             }
+
+            //Fermeture des sockets de connexion en mode passif
+            close(descSockPASVC);
+            close(descSockPASVS);
             
             //Ecrire les données du serveur dans l'interface utilisateur
             lenW = write(descSockCOM, buffer, strlen(buffer));
@@ -459,8 +475,6 @@ int main(){
         exit(-1);
     }
 
-    //Fermeture des sockets de connexion
-    close(descSockSERV);
+    //Fermeture du socket de connexion utilisateur
     close(descSockCOM);
-    close(descSockRDV);
 }
