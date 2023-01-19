@@ -381,11 +381,16 @@ void fils(int descSockCOM) {
                 exit(-1);
             }
 
-            //Ecriture sur le serveur passif
-            lenW = write(descSockPASVC, buffer, strlen(buffer));
-            if(lenW < 0) {
-                perror("Erreur de lecture PASV Serveur");
-                exit(-1);
+            //Pour rentrer dans la boucle la premiere fois on change la valeur de ecode mais pas a 0
+            ecode = 1;
+            while (ecode != 0) {
+                ecode = write(descSockPASVC, buffer, strlen(buffer));
+                memset(buffer, 0, MAXBUFFERLEN);
+                ecode = read(descSockPASVS, buffer, MAXBUFFERLEN - 1);
+                if (ecode < 0) {
+                    perror("Erreur lecture pasv serveur");
+                    exit(-1);
+                }
             }
 
             //Lecture des données renvoyées par le serveur 
