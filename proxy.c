@@ -238,7 +238,7 @@ void fils(int descSockCOM) {
         exit(-1);
     }
 
-    //Lecture des données renvoyées par le serveur (SYST)
+    //Lecture des données renvoyées par le serveur (215 SYST)
     memset(buffer, 0, MAXBUFFERLEN);
     lenR = read(descSockSERV, buffer, MAXBUFFERLEN-1);
     if(lenR < 0) {
@@ -246,7 +246,7 @@ void fils(int descSockCOM) {
         exit(-1);
     }
 
-    //Ecrire les données du serveur dans l'interface utilisateur (SYST)
+    //Ecrire les données du serveur dans l'interface utilisateur (215 SYST)
     lenW = write(descSockCOM, buffer, strlen(buffer));
     if (lenW < 0) {
         perror("Erreur d'écriture");
@@ -354,7 +354,7 @@ void fils(int descSockCOM) {
                 exit(-1);
             }
 
-            //Lecture des données renvoyées par le serveur 
+            //Lecture des données renvoyées par le serveur (150)
             memset(buffer, 0, MAXBUFFERLEN);
             lenR = read(descSockSERV, buffer, MAXBUFFERLEN-1);
             if(lenR < 0) {
@@ -405,7 +405,7 @@ void fils(int descSockCOM) {
             close(descSockPASVC);
             close(descSockPASVS);
             
-            //Ecrire les données du serveur dans l'interface utilisateur
+            //Ecrire les données du serveur dans l'interface utilisateur (Données + 226)
             lenW = write(descSockCOM, buffer, strlen(buffer));
             if (lenW < 0) {
                 perror("Erreur d'écriture");
